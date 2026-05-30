@@ -8,16 +8,15 @@
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Damage.h"
 #include "Perception/AISense_Damage.h"
-#include "StudentPerceptor.generated.h"
+#include "StudentPerceptorLammensYenco.generated.h"
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class LAMMENSYENCOZOMBIERUNTIME_API  UStudentPerceptor : public UActorComponent
+class LAMMENSYENCOZOMBIERUNTIME_API UStudentPerceptorLammensYenco : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
-	UStudentPerceptor();
+	UStudentPerceptorLammensYenco();
 	
 	virtual void BeginPlay() override;
 
