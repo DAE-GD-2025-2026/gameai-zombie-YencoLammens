@@ -94,12 +94,12 @@ namespace SurvivorAPI
     {
         UActorComponent* HC = FindComp(Pawn, TEXT("Health"));
         if (!HC) return 1.f;
-        struct FFloat { float R; };
-        FFloat MaxP{ 0.f }, CurP{ 0.f };
+        struct FInt { int32 R; };
+        FInt MaxP{ 0 }, CurP{ 0 };
         if (UFunction* F = HC->FindFunction(TEXT("GetMaxHealth"))) HC->ProcessEvent(F, &MaxP);
         if (MaxP.R == 0) return 1.f;
         if (UFunction* F = HC->FindFunction(TEXT("GetHealth")))    HC->ProcessEvent(F, &CurP);
-        return CurP.R / MaxP.R;
+        return static_cast<float>(CurP.R) / static_cast<float>(MaxP.R);
     }
 
     inline float GetStaminaRatio(APawn* Pawn)
