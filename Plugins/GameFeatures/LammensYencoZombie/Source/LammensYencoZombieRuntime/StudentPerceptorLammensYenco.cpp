@@ -82,9 +82,7 @@ void UStudentPerceptorLammensYenco::TickComponent(float DeltaTime, ELevelTick Ti
     KnownWeapons.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
     KnownHouses.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
     ActivePurgeZones.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
-
-    VisibleZombies.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
-
+    
     if (PerceptionComp)
         {
             TArray<AActor*> Perceived;
@@ -143,6 +141,7 @@ void UStudentPerceptorLammensYenco::OnPerceptionUpdated(AActor* Actor, FAIStimul
     else if (IsItem(Actor))
     {
         if (bSensed) KnownItems.AddUnique(Actor);
+        else KnownItems.Remove(Actor);
     }
     else if (IsHouse(Actor))
     {
