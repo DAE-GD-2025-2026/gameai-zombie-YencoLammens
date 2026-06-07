@@ -184,6 +184,9 @@ void UStudentPerceptorLammensYenco::UpdateBlackboardKeys()
     {
         BB->SetValueAsFloat(BBKeys::HealthValue, SurvivorAPI::GetHealthRatio(Pawn));
         BB->SetValueAsFloat(BBKeys::EnergyValue, SurvivorAPI::GetStaminaRatio(Pawn));
+        
+        if (UActorComponent* Inv = SurvivorAPI::FindComp(Pawn, TEXT("Inventory")))
+            BB->SetValueAsBool(BBKeys::bHasWeapon, SurvivorAPI::FindWeaponSlot(Inv) != -1);
     }
 }
 
