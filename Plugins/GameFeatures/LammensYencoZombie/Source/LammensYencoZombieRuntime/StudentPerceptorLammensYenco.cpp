@@ -3,7 +3,10 @@
 #include "StudentPerceptorLammensYenco.h"
 #include "AIController.h"
 #include "GameFramework/Pawn.h"
-#include "SurvivorAPIHelpersLammensYenco.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISenseConfig_Damage.h"
+#include "Perception/AISense_Damage.h"
+#include "LammensYencoZombieRuntime/SurvivorAPIHelpersLammensYenco.h"
 
 namespace BBKeys
 {
@@ -45,30 +48,65 @@ void UStudentPerceptorLammensYenco::TryBindPerception()
                 PC = AIC->GetComponentByClass<UAIPerceptionComponent>();
         }
     }
-    if (PC)
-    {
-        PC->OnTargetPerceptionUpdated.AddDynamic(this, &UStudentPerceptorLammensYenco::OnPerceptionUpdated);
-        bPerceptionBound = true;
-    }
+
+    if (!PC) return;
+
+    UAISenseConfig_Sight* SightConfig = NewObject<UAISenseConfig_Sight>(PC);
+    SightConfig->SightRadius = 1500.f;
+    SightConfig->LoseSightRadius = 1800.f;
+    SightConfig->PeripheralVisionAngleDegrees = 90.f;
+    SightConfig->SetMaxAge(5.f);
+    SightConfig->DetectionByAffiliation.bDetectEnemies = true;
+    SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
+    SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
+    PC->ConfigureSense(*SightConfig);
+
+    UAISenseConfig_Damage* DamageConfig = NewObject<UAISenseConfig_Damage>(PC);
+    DamageConfig->SetMaxAge(5.f);
+    PC->ConfigureSense(*DamageConfig);
+
+    PC->RequestStimuliListenerUpdate();
+    PC->OnTargetPerceptionUpdated.AddDynamic(this, &UStudentPerceptorLammensYenco::OnPerceptionUpdated);
+    bPerceptionBound = true;
+    PerceptionComp = PC;
 }
 
 void UStudentPerceptorLammensYenco::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
- 
+
     TryBindPerception();
- 
+
     VisibleZombies.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
     KnownItems.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
     KnownWeapons.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
     KnownHouses.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
     ActivePurgeZones.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
- 
-    const FVector OwnerPos = GetOwner()->GetActorLocation();
-    KnownHouses.RemoveAll([&](const TObjectPtr<AActor>& A) {
-        return !IsValid(A) || FVector::DistSquared(OwnerPos, A->GetActorLocation()) < FMath::Square(150.f);
-    });
- 
+
+    VisibleZombies.RemoveAll([](const TObjectPtr<AActor>& A) { return !IsValid(A); });
+
+    if (PerceptionComp)
+        {
+            TArray<AActor*> Perceived;
+            PerceptionComp->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), Perceived);
+            for (AActor* A : Perceived)
+            {
+                if (IsValid(A) && IsZombie(A))
+                {
+                    VisibleZombies.AddUnique(A);
+                    LastZombieSeenTime = GetWorld()->GetTimeSeconds();
+                }
+            }
+        }
+    
+        if (!VisibleZombies.IsEmpty() && GetWorld()->GetTimeSeconds() - LastZombieSeenTime > 3.f)
+            VisibleZombies.Empty();
+    
+        const FVector OwnerPos = GetOwner()->GetActorLocation();
+        KnownHouses.RemoveAll([&](const TObjectPtr<AActor>& A) {
+            return !IsValid(A) || FVector::DistSquared(OwnerPos, A->GetActorLocation()) < FMath::Square(150.f);
+        });
+
     UpdateBlackboardKeys();
 }
 
@@ -76,12 +114,26 @@ void UStudentPerceptorLammensYenco::OnPerceptionUpdated(AActor* Actor, FAIStimul
 {
     if (!IsValid(Actor)) return;
 
+    if (Stimulus.Type == UAISense::GetSenseID<UAISense_Damage>())
+    {
+        if (IsZombie(Actor) && Stimulus.WasSuccessfullySensed())
+        {
+            VisibleZombies.AddUnique(Actor);
+            LastZombieSeenTime = GetWorld()->GetTimeSeconds();
+        }
+        UpdateBlackboardKeys();
+        return;
+    }
+
     const bool bSensed = Stimulus.WasSuccessfullySensed();
 
     if (IsZombie(Actor))
     {
-        if (bSensed) VisibleZombies.AddUnique(Actor);
-        else VisibleZombies.Remove(Actor);
+        if (bSensed)
+        {
+            VisibleZombies.AddUnique(Actor);
+            LastZombieSeenTime = GetWorld()->GetTimeSeconds();
+        }
     }
     else if (IsWeapon(Actor))
     {
@@ -137,7 +189,7 @@ void UStudentPerceptorLammensYenco::UpdateBlackboardKeys()
 
 AActor* UStudentPerceptorLammensYenco::FindNearest(const TArray<TObjectPtr<AActor>>& Actors) const
 {
-    AActor* Nearest  = nullptr;
+    AActor* Nearest = nullptr;
     float BestDist = FLT_MAX;
     const FVector OwnerPos = GetOwner()->GetActorLocation();
 

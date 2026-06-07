@@ -20,13 +20,16 @@ EBTNodeResult::Type UBTTask_FleeFromZombieLammensYenco::ExecuteTask(UBehaviorTre
 	AActor* Zombie = Cast<AActor>(BB->GetValueAsObject(NearestZombieKey.SelectedKeyName));
 	if (!Pawn || !IsValid(Zombie)) return EBTNodeResult::Failed;
 
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+	if (!NavSys) return EBTNodeResult::Failed;
+
 	const FVector AwayDir = (Pawn->GetActorLocation() - Zombie->GetActorLocation()).GetSafeNormal();
 	const FVector FleeTarget = Pawn->GetActorLocation() + AwayDir * FleeDistance;
 
 	FNavLocation NavLoc;
-	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
-	if (!NavSys || !NavSys->ProjectPointToNavigation(FleeTarget, NavLoc))
-		return EBTNodeResult::Failed;
+	if (!NavSys->ProjectPointToNavigation(FleeTarget, NavLoc))
+		if (!NavSys->GetRandomReachablePointInRadius(Pawn->GetActorLocation(), FleeDistance, NavLoc))
+			return EBTNodeResult::Failed;
 
 	auto Result = AIC->MoveToLocation(NavLoc.Location, 50.f);
 	if (Result == EPathFollowingRequestResult::Failed) return EBTNodeResult::Failed;

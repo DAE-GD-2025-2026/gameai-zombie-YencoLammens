@@ -5,9 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Perception/AIPerceptionComponent.h"
-#include "Perception/AISenseConfig_Sight.h"
-#include "Perception/AISenseConfig_Damage.h"
-#include "Perception/AISense_Damage.h"
+#include "Perception/AISense_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "StudentPerceptorLammensYenco.generated.h"
 
@@ -31,6 +29,9 @@ private:
 	TObjectPtr<UBlackboardComponent> BlackboardComp;
 
 	UPROPERTY()
+	TObjectPtr<UAIPerceptionComponent> PerceptionComp;
+
+	UPROPERTY()
 	TArray<TObjectPtr<AActor>> VisibleZombies;
 
 	UPROPERTY()
@@ -45,6 +46,9 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<AActor>> ActivePurgeZones;
 
+	float LastZombieSeenTime = -1.f;
+	bool bPerceptionBound = false;
+
 	UBlackboardComponent* GetBlackboard();
 	void UpdateBlackboardKeys();
 	AActor* FindNearest(const TArray<TObjectPtr<AActor>>& Actors) const;
@@ -54,6 +58,4 @@ private:
 	bool IsItem(AActor* Actor) const;
 	bool IsHouse(AActor* Actor) const;
 	bool IsPurgeZone(AActor* Actor) const;
-	
-	bool bPerceptionBound = false;
 };
