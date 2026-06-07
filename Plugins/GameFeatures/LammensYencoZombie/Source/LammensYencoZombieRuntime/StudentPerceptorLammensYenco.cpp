@@ -202,6 +202,7 @@ AActor* UStudentPerceptorLammensYenco::FindNearest(const TArray<TObjectPtr<AActo
     for (const TObjectPtr<AActor>& Actor : Actors)
     {
         if (!IsValid(Actor)) continue;
+        if (Actor->GetOwner() != nullptr) continue;
         const float Dist = FVector::DistSquared(OwnerPos, Actor->GetActorLocation());
         if (Dist < BestDist) { BestDist = Dist; Nearest = Actor; }
     }
@@ -210,6 +211,6 @@ AActor* UStudentPerceptorLammensYenco::FindNearest(const TArray<TObjectPtr<AActo
 
 bool UStudentPerceptorLammensYenco::IsZombie(AActor* A) const { return A->GetClass()->GetName().Contains(TEXT("Zombie")); }
 bool UStudentPerceptorLammensYenco::IsWeapon(AActor* A) const { const FString N = A->GetClass()->GetName(); return N.Contains(TEXT("Pistol")) || N.Contains(TEXT("Shotgun")); }
-bool UStudentPerceptorLammensYenco::IsItem(AActor* A) const { return A->GetClass()->GetName().Contains(TEXT("Item")); }
+bool UStudentPerceptorLammensYenco::IsItem(AActor* A) const { const FString N = A->GetClass()->GetName(); return N.Contains(TEXT("Food")) || N.Contains(TEXT("Medkit")) || N.Contains(TEXT("Garbage")) || N.Contains(TEXT("Item")); }
 bool UStudentPerceptorLammensYenco::IsHouse(AActor* A) const { return A->GetClass()->GetName().Contains(TEXT("House")); }
 bool UStudentPerceptorLammensYenco::IsPurgeZone(AActor* A) const { return A->GetClass()->GetName().Contains(TEXT("Purge")); }
