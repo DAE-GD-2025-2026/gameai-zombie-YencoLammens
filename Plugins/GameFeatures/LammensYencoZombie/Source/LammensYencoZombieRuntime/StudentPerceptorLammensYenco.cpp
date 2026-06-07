@@ -102,7 +102,7 @@ void UStudentPerceptorLammensYenco::TickComponent(float DeltaTime, ELevelTick Ti
     
         const FVector OwnerPos = GetOwner()->GetActorLocation();
         KnownHouses.RemoveAll([&](const TObjectPtr<AActor>& A) {
-            return !IsValid(A) || FVector::DistSquared(OwnerPos, A->GetActorLocation()) < FMath::Square(150.f);
+            return !IsValid(A) || FVector::DistSquared(OwnerPos, A->GetActorLocation()) < FMath::Square(800.f);
         });
 
     UpdateBlackboardKeys();
