@@ -132,6 +132,10 @@ void UStudentPerceptorLammensYenco::OnPerceptionUpdated(AActor* Actor, FAIStimul
             VisibleZombies.AddUnique(Actor);
             LastZombieSeenTime = GetWorld()->GetTimeSeconds();
         }
+        else
+        {
+            VisibleZombies.Remove(Actor);
+        }
     }
     else if (IsWeapon(Actor))
     {
