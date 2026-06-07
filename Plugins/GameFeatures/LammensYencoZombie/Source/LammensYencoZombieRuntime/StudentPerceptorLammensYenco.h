@@ -46,12 +46,15 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<AActor>> ActivePurgeZones;
 
-	float LastZombieSeenTime = -1.f;
+	UPROPERTY()
+	TMap<TObjectPtr<AActor>, float> ZombieLastSeenTimes;
+	float ZombieLinger = 7.f;
+	
 	bool bPerceptionBound = false;
 
 	UBlackboardComponent* GetBlackboard();
 	void UpdateBlackboardKeys();
-	AActor* FindNearest(const TArray<TObjectPtr<AActor>>& Actors) const;
+	AActor* FindNearest(const TArray<TObjectPtr<AActor>>& Actors, bool bIsItem = false) const;
 
 	bool IsZombie(AActor* Actor) const;
 	bool IsWeapon(AActor* Actor) const;
